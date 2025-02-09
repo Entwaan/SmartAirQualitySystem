@@ -1,5 +1,0 @@
-{
-"mqtt_broker":"0.0.0.0",
-"mqtt_port":"8081",
-"mqtt_topic":"sensor/data"
-}

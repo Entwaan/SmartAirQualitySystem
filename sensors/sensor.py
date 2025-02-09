@@ -1,54 +1,173 @@
-import paho.mqtt.client as mqtt
-import cherrypy
-import threading
 import json
-import random
+import requests
 import time
-class RestAPI():
-    def __init__(self, assigned_ip, catalog_ip):
-        self.ip = assigned_ip
-        self.catalog_ip = catalog_ip
+import threading
+import numpy as np
+import cherrypy
+from MyMQTT import *
 
 
+class SensorSimulator:
+    def __init__(self, mode='moderate'):
+        self.mode = mode
+        self.computed_aqi_json = None
+        self.sensors = {
+            'PM2.5': self.simulate_pm25,
+            'O3': self.simulate_o3,
+            'NO2': self.simulate_no2,
+            'SO2': self.simulate_so2, 
+            'PM10': self.simulate_pm10
+        }
+
+    def simulate_pm25(self):
+        if self.mode == 'good':
+            return np.random.uniform(0, 12)
+        elif self.mode == 'bad':
+            return np.random.uniform(35.5, 55.4)
+        else:
+            return np.random.uniform(12.1, 35.4)
+        
+    def simulate_pm10(self):
+        if self.mode == 'good':
+            return np.random.uniform(0, 22)
+        elif self.mode == 'bad':
+            return np.random.uniform(55.5, 105.4)
+        else:
+            return np.random.uniform(25.1, 50.4)
+
+    def simulate_o3(self):
+        if self.mode == 'good':
+            return np.random.uniform(0, 54)
+        elif self.mode == 'bad':
+            return np.random.uniform(125, 164)
+        else:
+            return np.random.uniform(55, 124)
+
+    def simulate_no2(self):
+        if self.mode == 'good':
+            return np.random.uniform(0, 53)
+        elif self.mode == 'bad':
+            return np.random.uniform(101, 360)
+        else:
+            return np.random.uniform(54, 100)
+
+    def simulate_so2(self):
+        if self.mode == 'good':
+            return np.random.uniform(0, 35)
+        elif self.mode == 'bad':
+            return np.random.uniform(186, 304)
+        else:
+            return np.random.uniform(36, 185)
+
+class SensorsConnector:
+    def __init__(self, config):
+        self.config = config
+        self.simulator = SensorSimulator()
+
+        # Flag to stop the other threads
+        self.thread_stop = threading.Event()
+        
+        self._get_broker()
+        self.mqtt_client = MyMQTT(self.config['mqttInfos']['clientId'], self.brokerIp, self.brokerPort, self)
+        self.mqtt_client.start()
+        self.mqtt_client.mySubscribe(self.config['endpoints']['mqtt']['topics'][0])
+        self._post_device()
+
+    def notify(self, topic, msg):
+        print(f"Received message on topic {topic}: {msg}")
+        self.simulator.computed_aqi_json = json.loads(msg)
 
 
+    def _get_broker(self):
+        self.catalog_ip = self.config["catalog"]["ip"]
+        self.catalog_port = self.config["catalog"]["port"]
+        response = requests.get(f"http://{self.catalog_ip}:{self.catalog_port}/broker")
+        broker_info = response.json()
+        self.brokerIp = broker_info["ip"]
+        self.brokerPort = broker_info["port"]
 
-class Sensors():
-    def __init__(self, interval, shape, scale):
-        self.PM2 = None
-        self.O3 = None
-        self.NO2 = None
-        self.SO2 = None
-        self.interval = interval
-        self.shape = shape
-        self.scale = scale
-    def get_sensor(self, sensor_name):
-        reading = random.weibullvariate(self.shape, self.scale)
-        return reading
+    def _post_device(self):
+        # Register device at the catalog
+        body = {
+            "ip": self.config["ip"],
+            "port": self.config["port"],
+            "endpoints": self.config["endpoints"],
+            "availableResources": self.config["availableResources"],
+            "roomID": self.config["roomID"],
+        }
+        response = requests.post(f"http://{self.catalog_ip}:{self.catalog_port}/devices", json=body)
+        self.device_id = response.json()["deviceID"]
+        
 
-    def read_periodically(self):
-        while True:
-            self.PM2 = self.get_sensor('PM2')
-            self.O3 = self.get_sensor('O3')
-            self.NO2 = self.get_sensor('NO2')
-            self.SO2 = self.get_sensor('SO2')
-            print(f"PM2: {self.PM2}, O3: {self.O3}, NO2: {self.NO2}, SO2: {self.SO2}")
-            time.sleep(self.interval)
+    def _put_device(self):
+        # Update device at the catalog
+        body = {
+            "ip": self.config["ip"],
+            "port": self.config["port"],
+            "endpoints": self.config["endpoints"],
+            "availableResources": self.config["availableResources"],
+            "roomID": self.config["roomID"],
+        }
+        response = requests.put(f"http://{self.catalog_ip}:{self.catalog_port}/devices/{self.device_id}", json=body)
 
-    def start_reading(self):
-        thread = threading.Thread(target=self.read_periodically, daemon=True)
-        thread.start()
+    def publish_sensor_data(self):
+        while not self.thread_stop.is_set():
+            sensor_data = {
+                'bn': self.config['mqttInfos']['basename'] + "/pollutants",
+                'bt': time.time(),
+                'e': [
+                    {'n': 'PM2.5', 'u': 'ug/m3', 'v': self.simulator.simulate_pm25()},
+                    {'n': 'O3', 'u': 'ug/m3', 'v': self.simulator.simulate_o3()},
+                    {'n': 'NO2', 'u': 'ug/m3', 'v': self.simulator.simulate_no2()},
+                    {'n': 'SO2', 'u': 'ug/m3', 'v': self.simulator.simulate_so2()},
+                    {'n': 'PM10', 'u': 'ug/m3', 'v': self.simulator.simulate_pm10()}
+                ]
+            }
+            self.mqtt_client.myPublish(self.config['endpoints']['mqtt']['topics'][1], json.dumps(sensor_data))
+            self._put_device()
+            time.sleep(60)
 
+    def change_mode(self):
+        while not self.thread_stop.is_set():
+            mode = input("Enter new mode (good, moderate, bad) for the simulated air quality:")
+            if(mode not in ['good', 'moderate', 'bad']):
+                print("Invalid mode. Please enter good, moderate or bad.")
+                continue
+            self.simulator.mode = mode
 
-if __name__ == "__main__":
-    api = RestAPI("192.168.0.1", "127.0.0.1" )
-    #print(api.ip)
+class AQIRestService:
+    exposed = True
+    def __init__(self, simulator):
+        self.simulator = simulator
 
-    sensors = Sensors(interval=1, shape=2, scale=1)
-    sensors.start_reading()
+    def GET(self, *uri, **params):
+        return json.dumps(self.simulator.computed_aqi_json).encode('utf-8')
 
-    try:
-        while True:
-            time.sleep(1)  # Keep the main program running
-    except KeyboardInterrupt:
-        print("Program stopped.")
+if __name__ == '__main__':
+    config = json.load(open("config-sensor.json"))
+
+    conf = {
+        '/': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+            'tools.sessions.on': True
+        }
+    }
+
+    connector = SensorsConnector(config)
+    service = AQIRestService(connector.simulator)
+
+    # To stop the threads when CherryPy stops
+    def shutdown():
+        print("Stopping mqtt and CLI threads...")
+        connector.thread_stop.set()
+
+    cherrypy.engine.subscribe('stop', shutdown)
+
+    cherrypy.tree.mount(service, '/aqi', conf)
+    cherrypy.config.update({
+        'server.socket_port': 8080,
+        "tools.response_headers.on": True,
+        "tools.response_headers.headers": [("Content-Type", "application/json")]
+    })
+    cherrypy.engine.start()
+    cherrypy.engine.block()
