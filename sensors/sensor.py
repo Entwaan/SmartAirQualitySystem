@@ -11,13 +11,6 @@ class SensorSimulator:
     def __init__(self, mode='moderate'):
         self.mode = mode
         self.computed_aqi_json = None
-        self.sensors = {
-            'PM2.5': self.simulate_pm25,
-            'O3': self.simulate_o3,
-            'NO2': self.simulate_no2,
-            'SO2': self.simulate_so2, 
-            'PM10': self.simulate_pm10
-        }
 
     def simulate_pm25(self):
         if self.mode == 'good':
@@ -156,10 +149,17 @@ if __name__ == '__main__':
     connector = SensorsConnector(config)
     service = AQIRestService(connector.simulator)
 
+    # Start the threads
+    t1 = threading.Thread(target=connector.publish_sensor_data)
+    t1.start()
+    t2 = threading.Thread(target=connector.change_mode)
+    t2.start()
+
     # To stop the threads when CherryPy stops
     def shutdown():
         print("Stopping mqtt and CLI threads...")
         connector.thread_stop.set()
+        connector.mqtt_client.stop()
 
     cherrypy.engine.subscribe('stop', shutdown)
 

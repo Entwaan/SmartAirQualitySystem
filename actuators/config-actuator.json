@@ -1,0 +1,20 @@
+{
+    "ip": "localhost",
+    "port": 8082,
+    "endpoints": {
+        "mqtt": {
+            "topics": ["/buildingA/1/101/ventilation", "/buildingA/1/101/windows"]
+        },
+        "rest": { "restIP": "http://localhost:8081" }
+    },
+    "availableResources": ["ventilation", "windows"],
+    "roomID": "room-uuid",
+    "catalog": {
+        "ip": "localhost",
+        "port": 8080
+    },
+    "mqttInfos": {
+        "clientId": "actuator-A101",
+        "basename": "/buildingA/1/101"
+    }
+}
