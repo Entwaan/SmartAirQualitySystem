@@ -1,13 +1,13 @@
 {
     "dbConnection": {
-        "host": "localhost",
-        "port": 3307,
+        "host": "db",
+        "port": 3306,
         "database": "timeseries_db",
         "user": "admin",
         "password": "admin"
     },
     "catalog": {
-        "ip": "localhost",
+        "ip": "catalog",
         "port": 8080
     },
     "mqttInfos": {

@@ -48,7 +48,7 @@ class CatalogService:
         while not self.thread_stop.is_set():
             print("Running periodic cleanup...")
             devices = CatalogService.load_json("devices.json")
-            current_time = datetime.datetime.now(datetime.UTC)
+            current_time = datetime.datetime.now(datetime.timezone.utc)
             updated_devices = [
                 device for device in devices
                 if datetime.datetime.fromisoformat(device["insert-timestamp"]) > current_time - datetime.timedelta(minutes=2)
@@ -102,7 +102,7 @@ class CatalogService:
             if not any(room["roomID"] == device["roomID"] for room in self.rooms):
                 raise cherrypy.HTTPError(404, "Referenced room not found")
             device["deviceID"] = str(uuid.uuid4())
-            device["insert-timestamp"] = datetime.datetime.now(datetime.UTC).isoformat()
+            device["insert-timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
             for room in self.rooms:
                 if room["roomID"] == device["roomID"]:
                     room["devices"].append(device["deviceID"])
@@ -147,7 +147,7 @@ class CatalogService:
             if not any(room["roomID"] == device["roomID"] for room in self.rooms):
                 raise cherrypy.HTTPError(404, "Referenced room not found")
             device["deviceID"] = uri[1]
-            device["insert-timestamp"] = datetime.datetime.now(datetime.UTC).isoformat()
+            device["insert-timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
             return self.update_item(self.devices, device, uri[1], "deviceID", "devices.json")
 
         if len(uri) == 2 and uri[0] == "rooms":
@@ -216,6 +216,7 @@ if __name__ == '__main__':
     cherrypy.tree.mount(service, '/', conf)
     cherrypy.config.update({
         'server.socket_port': 8080,
+        'server.socket_host': '0.0.0.0',
         "tools.response_headers.on": True,
         "tools.response_headers.headers": [("Content-Type", "application/json")]
     })

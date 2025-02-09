@@ -120,21 +120,29 @@ class SensorsConnector:
             self._put_device()
             time.sleep(60)
 
-    def change_mode(self):
-        while not self.thread_stop.is_set():
-            mode = input("Enter new mode (good, moderate, bad) for the simulated air quality:")
-            if(mode not in ['good', 'moderate', 'bad']):
-                print("Invalid mode. Please enter good, moderate or bad.")
-                continue
-            self.simulator.mode = mode
-
 class AQIRestService:
     exposed = True
     def __init__(self, simulator):
         self.simulator = simulator
 
     def GET(self, *uri, **params):
+        if len(uri) == 0 or uri[0] != "aqi":
+            raise cherrypy.HTTPError(404, "Endpoint not found")
         return json.dumps(self.simulator.computed_aqi_json).encode('utf-8')
+    
+    def POST(self, *uri, **params):
+        if uri and uri[0] == "mode":
+            body = cherrypy.request.body.read()
+            data = json.loads(body)
+            mode = data.get("mode")
+            
+            if mode in ["good", "moderate", "bad"]:
+                self.simulator.mode = mode
+                return json.dumps({"status": "Mode updated"}).encode('utf-8')
+            else:
+                raise cherrypy.HTTPError(400, "Invalid mode")
+        
+        raise cherrypy.HTTPError(404, "Endpoint not found")
 
 if __name__ == '__main__':
     config = json.load(open("config-sensor.json"))
@@ -149,13 +157,11 @@ if __name__ == '__main__':
     connector = SensorsConnector(config)
     service = AQIRestService(connector.simulator)
 
-    # Start the threads
+    # Start the thread to publish the sensor data
     t1 = threading.Thread(target=connector.publish_sensor_data)
     t1.start()
-    t2 = threading.Thread(target=connector.change_mode)
-    t2.start()
 
-    # To stop the threads when CherryPy stops
+    # To stop the thread when CherryPy stops
     def shutdown():
         print("Stopping mqtt and CLI threads...")
         connector.thread_stop.set()
@@ -163,9 +169,10 @@ if __name__ == '__main__':
 
     cherrypy.engine.subscribe('stop', shutdown)
 
-    cherrypy.tree.mount(service, '/aqi', conf)
+    cherrypy.tree.mount(service, '/', conf)
     cherrypy.config.update({
         'server.socket_port': 8080,
+        'server.socket_host': '0.0.0.0',
         "tools.response_headers.on": True,
         "tools.response_headers.headers": [("Content-Type", "application/json")]
     })

@@ -1,9 +1,11 @@
 [
     {
-        "number": 102,
+        "number": 101,
         "floor": 1,
-        "buildingName": "Main Building",
+        "buildingName": "buildingA",
         "roomID": "157eafe2-95d3-4886-8f96-0a8c12c205b9",
+        "openingHours": { "start": 8, "end": 18 },
+        "coordinates": { "lat": 45.07, "lon": 7.67 },
         "devices": []
     }
 ]

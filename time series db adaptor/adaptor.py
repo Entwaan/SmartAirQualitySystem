@@ -1,6 +1,7 @@
 import json
 import requests
-from datetime import datetime, timedelta
+import time
+from datetime import datetime
 
 import cherrypy
 import mysql.connector
@@ -12,7 +13,8 @@ class TimeSeriesAdaptor:
 
     def __init__(self):
         self.settings = json.load(open('config-time-series-db-adaptor.json'))
-
+        print("Connecting to MySQL database...", flush=True)
+        time.sleep(5)
         self.db = mysql.connector.connect(
             host=self.settings["dbConnection"]["host"],
             port=self.settings["dbConnection"]["port"],
@@ -49,14 +51,15 @@ class TimeSeriesAdaptor:
         return cursor.fetchall()
 
     def notify(self, topic, payload):
-        message_json = json.loads(payload)
+        message = json.loads(payload)
+        message_json = json.loads(message)
         topic_parts = topic.split("/")
         building = topic_parts[0]
         floor = topic_parts[1]
         room = topic_parts[2]
         measureType = topic_parts[3]
-        timestamp = datetime.fromtimestamp(message_json["timestamp"])
-        value = message_json["value"]
+        timestamp = datetime.fromtimestamp(message_json["bt"])
+        value = message_json["e"][0]["v"]
 
         if(measureType in ["aqi", "windows", "ventilation"]):
             tables = {"aqi": "air_quality_index", "windows": "windows", "ventilation": "ventilation"}
@@ -107,7 +110,6 @@ if __name__ == '__main__':
             'tools.sessions.on': True
         }
     }
-    
     service = TimeSeriesAdaptor()
 
     # To stop the mqtt client when CherryPy stops
@@ -120,6 +122,7 @@ if __name__ == '__main__':
     cherrypy.tree.mount(service, '/', conf)
     cherrypy.config.update({
         'server.socket_port': 8080,
+        'server.socket_host': '0.0.0.0',
         "tools.response_headers.on": True,
         "tools.response_headers.headers": [("Content-Type", "application/json")]
     })

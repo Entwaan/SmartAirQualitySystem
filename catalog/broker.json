@@ -1,1 +1,1 @@
-{ "ip": "mqtt.eclipseprojects.io", "port": 1883 }
+{ "ip": "broker", "port": 1883 }

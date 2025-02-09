@@ -8,9 +8,9 @@
         "rest": { "restIP": "http://localhost:8081" }
     },
     "availableResources": ["aqi", "pollutants"],
-    "roomID": "room-uuid",
+    "roomID": "157eafe2-95d3-4886-8f96-0a8c12c205b9",
     "catalog": {
-        "ip": "localhost",
+        "ip": "catalog",
         "port": 8080
     },
     "mqttInfos": {

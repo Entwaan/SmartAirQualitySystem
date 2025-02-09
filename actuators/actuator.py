@@ -177,6 +177,7 @@ if __name__ == '__main__':
     cherrypy.tree.mount(service, '/', conf)
     cherrypy.config.update({
         'server.socket_port': 8080,
+        'server.socket_host': '0.0.0.0',
         "tools.response_headers.on": True,
         "tools.response_headers.headers": [("Content-Type", "application/json")]
     })
