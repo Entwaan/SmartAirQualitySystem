@@ -11,6 +11,7 @@ class ActuatorsConnector:
         self.config = config
         self.windows_state = "Closed"
         self.ventilation_state = "Off"
+        self.led_rgb = "Off"
 
         # Flag to stop the other threads
         self.thread_stop = threading.Event()
@@ -19,8 +20,15 @@ class ActuatorsConnector:
         self._get_opening_hours()
         self.mqtt_client = MyMQTT(self.config['mqttInfos']['clientId'], self.brokerIp, self.brokerPort, self)
         self.mqtt_client.start()
+        self.mqtt_client.mySubscribe(self.config['mqttInfos']['basename']+"/LED")
         self._post_device()
 
+    def notify(self, topic, payload):
+        print(f"Received message on topic {topic}: {payload}")
+        msg = json.loads(payload)
+        if(topic == self.config['mqttInfos']['basename']+"/LED"):
+            self.led_rgb = msg['e'][0]['v']
+            print(f"LED color changed to: {self.led_rgb}")
 
     def _get_broker(self):
         self.catalog_ip = self.config["catalog"]["ip"]
