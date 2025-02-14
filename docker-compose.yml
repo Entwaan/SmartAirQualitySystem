@@ -1,5 +1,4 @@
 
-
 services:
 
   # Message Broker (MQTT)
@@ -16,7 +15,7 @@ services:
   # Catalog Service (Gère les devices, rooms et users)
   catalog:
     build: ./catalog
-    container_name: catalog_service
+    container_name: catalog
     ports:
       - "8080:8080"
     volumes:
@@ -25,7 +24,7 @@ services:
       - broker
     restart: always
 
-  #  MySQL Database (Time Series DB)
+  # MySQL Database (Time Series DB)
   time_series_db:
     image: mysql:latest
     container_name: time_series_db
@@ -45,10 +44,10 @@ services:
       retries: 5
       start_period: 10s
 
-  #  Time Series Database Adapter
+  # Time Series Database Adapter
   time_series_db_adaptor:
     build: ./time_series_db_adaptor
-    container_name: time_series_adaptor
+    container_name: adaptor
     ports:
       - "8081:8081"
     depends_on:
@@ -56,18 +55,18 @@ services:
         condition: service_healthy
     restart: always
 
-  #  Weather Adapter (Récupère les données météo)
-  weather:
+  # Weather Adapter (Récupère les données météo)
+  weather_adaptor:
     build: ./weather
     container_name: weather_adaptor
     ports:
       - "8082:8082"
     restart: always
 
-  #  Actuators Service (Simule les actuateurs : fenêtres, ventilation)
+  # Actuators Service (Simule les actuateurs : fenêtres, ventilation)
   actuators:
     build: ./actuators
-    container_name: actuators_service
+    container_name: actuator
     ports:
       - "8083:8083"
     depends_on:
@@ -75,10 +74,10 @@ services:
       - catalog
     restart: always
 
-  # EXI Sensors Service (Simule les capteurs de qualité de l'air)
+  # Sensors Service (Simule les capteurs de qualité de l'air)
   sensors:
     build: ./sensors
-    container_name: sensors_service
+    container_name: sensor
     ports:
       - "8084:8084"
     depends_on:

@@ -1,0 +1,18 @@
+{
+    "dependencies": [
+        "cherrypy",
+        "requests"
+    ],
+    "weatherAPI": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "params": {
+            "latitude": 45.065037,
+            "longitude": 7.658205,
+            "current_weather": "true"
+        }
+    },
+    "server": {
+        "host": "0.0.0.0",
+        "port": 8082
+    }
+}

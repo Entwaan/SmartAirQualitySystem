@@ -3,7 +3,7 @@
         "host": "db",
         "port": 3306,
         "database": "timeseries_db",
-        "user": "user",
+        "user": "user", 
         "password": "admin"
     },
     "catalog": {
