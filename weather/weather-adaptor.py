@@ -1,73 +1,49 @@
-from flask import Flask, jsonify, request
-
-app = Flask(__name__)
+import cherrypy
+import json
 
 received_data = None
 
-# TARGET_SYSTEM_URL = "http://<target-microservice>:<port>/endpoint"
+class WeatherAdapter:
+    exposed = True
 
-@app.route('/', methods=['GET'])
-def home():
-    """
-    Endpoint pour vérifier que l'API fonctionne.
-    """
-    return jsonify({"status": "success", "message": "Weather Adaptor API is running"}), 200
-
-
-@app.route('/receive-json', methods=['POST'])
-def receive_json():
-    """
-    Endpoint pour recevoir des données JSON envoyées par weather.py.
-    """
-    global received_data
-    try:
-        # Get entering JSON data
-        received_data = request.get_json()
-        if not received_data:
-            return jsonify({"status": "error", "message": "No data received"}), 400
-
-        # Sanity check
-        print("Received JSON data (first line):", received_data[0])
-
-        # Uncomment after to the target microservice:
-        # send_to_target_system(received_data)
-
-        return jsonify({"status": "success", "message": "Data received successfully"}), 200
-    except Exception as e:
-        print(f"Error receiving data: {e}")
-        return jsonify({"status": "error", "message": "Internal Server Error"}), 500
-
-
-@app.route('/data', methods=['GET'])
-def get_data():
-    """
-    Endpoint pour afficher la première ligne des données JSON reçues.
-    """
-    if received_data is None:
-        return jsonify({"status": "error", "message": "No data received yet"}), 404
-
-    # Show the first line for sanity check
-    return jsonify({"first_line": received_data[0]}), 200
-
-
-def send_to_target_system(data):
-    """
-    Fonction pour envoyer les données JSON au microservice cible.
-    """
-    try:
-        # prepare to send JSONs
-        headers = {"Content-Type": "application/json"}
-        # Change  <TARGET_SYSTEM_URL> when we will have it
-        response = requests.post(TARGET_SYSTEM_URL, json=data, headers=headers)
-
-        if response.status_code == 200:
-            print("Data successfully sent to target system.")
+    def GET(self, *uri, **params):
+      
+        if not uri:
+            return json.dumps({"status": "success", "message": "Weather Adaptor API is running"})
+        elif uri[0] == "data":
+            return self.get_data()
         else:
-            print(f"Failed to send data to target system. Status code: {response.status_code}, Response: {response.text}")
-    except Exception as e:
-        print(f"Error sending data to target system: {e}")
+            return json.dumps({"status": "error", "message": "Invalid endpoint"})
 
+    def POST(self, *uri, **params):
+        global received_data
+        try:
+            content_length = cherrypy.request.headers['Content-Length']
+            raw_body = cherrypy.request.body.read(int(content_length))
+            received_data = json.loads(raw_body)
+
+            if not received_data:
+                return json.dumps({"status": "error", "message": "No data received"})
+            
+            # Sanity check
+            print("Received JSON data (first line):", received_data[0])
+            
+            return json.dumps({"status": "success", "message": "Data received successfully"})
+        except Exception as e:
+            print(f"Error receiving data: {e}")
+            return json.dumps({"status": "error", "message": "Internal Server Error"})
+
+    def get_data(self):
+        global received_data
+        if received_data is None:
+            return json.dumps({"status": "error", "message": "No data received yet"})
+
+        return json.dumps({"first_line": received_data[0]})
 
 if __name__ == "__main__":
-    print("Starting Weather Adaptor API on port 5000...")
-    app.run(host="0.0.0.0", port=5000)
+    cherrypy.config.update({
+        'server.socket_host': '0.0.0.0',
+        'server.socket_port': 8080,
+        'log.screen': True
+    })
+    cherrypy.quickstart(WeatherAdapter(), '/')
