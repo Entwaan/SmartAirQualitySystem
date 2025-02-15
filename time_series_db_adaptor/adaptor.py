@@ -16,7 +16,7 @@ class TimeSeriesAdaptor:
         print("Connecting to MySQL database...", flush=True)
         time.sleep(5)
         self.db = mysql.connector.connect(
-            host="time_series_db", # Not sure about that
+            host=self.settings["dbConnection"]["host"],
             port=self.settings["dbConnection"]["port"],
             user=self.settings["dbConnection"]["user"],
             password=self.settings["dbConnection"]["password"],
@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
     cherrypy.tree.mount(service, '/', conf)
     cherrypy.config.update({
-        'server.socket_port': 8081,
+        'server.socket_port': 8080,
         'server.socket_host': '0.0.0.0',
         "tools.response_headers.on": True,
         "tools.response_headers.headers": [("Content-Type", "application/json")]

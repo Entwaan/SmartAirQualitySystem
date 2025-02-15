@@ -1,11 +1,11 @@
 {
-    "ip": "localhost",
-    "port": 8081,
+    "ip": "sensors",
+    "port": 8080,
     "endpoints": {
         "mqtt": {
             "topics": ["/buildingA/1/101/aqi", "/buildingA/1/101/pollutants"]
         },
-        "rest": { "restIP": "http://localhost:8081" }
+        "rest": { "restIP": "http://sensors:8080" }
     },
     "availableResources": ["aqi", "pollutants"],
     "roomID": "157eafe2-95d3-4886-8f96-0a8c12c205b9",

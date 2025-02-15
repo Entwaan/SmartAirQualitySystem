@@ -1,86 +1,59 @@
-
 services:
-
-  # Message Broker (MQTT)
-  broker:
-    image: eclipse-mosquitto
-    container_name: mqtt_broker
-    ports:
-      - "1883:1883"
-      - "9001:9001"
-    volumes:
-      - ./broker/mosquitto.conf:/mosquitto/config/mosquitto.conf
-    restart: always
-
-  # Catalog Service (Gère les devices, rooms et users)
-  catalog:
-    build: ./catalog
-    container_name: catalog
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./catalog:/app
-    depends_on:
-      - broker
-    restart: always
-
-  # MySQL Database (Time Series DB)
-  time_series_db:
-    image: mysql:latest
-    container_name: time_series_db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: timeseries_db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./time_series_db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      retries: 5
-      start_period: 10s
-
-  # Time Series Database Adapter
-  time_series_db_adaptor:
-    build: ./time_series_db_adaptor
-    container_name: adaptor
-    ports:
-      - "8081:8081"
-    depends_on:
-      time_series_db:
-        condition: service_healthy
-    restart: always
-
-  # Weather Adapter (Récupère les données météo)
-  weather_adaptor:
-    build: ./weather
-    container_name: weather_adaptor
-    ports:
-      - "8082:8082"
-    restart: always
-
-  # Actuators Service (Simule les actuateurs : fenêtres, ventilation)
-  actuators:
-    build: ./actuators
-    container_name: actuator
-    ports:
-      - "8083:8083"
-    depends_on:
-      - broker
-      - catalog
-    restart: always
-
-  # Sensors Service (Simule les capteurs de qualité de l'air)
-  sensors:
-    build: ./sensors
-    container_name: sensor
-    ports:
-      - "8084:8084"
-    depends_on:
-      - broker
-      - catalog
-    restart: always
+    db:
+        build: ./time_series_db
+        expose:
+            - "3306"
+        ports:
+            - "3307:3306"
+    broker:
+        build: ./broker
+        expose:
+            - "1883"
+        ports:
+            - "1883:1883"
+    catalog:
+        build: ./catalog
+        expose:
+            - "8080"
+        ports:
+            - "8080:8080"
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8080/broker"]
+            interval: 10s
+            timeout: 5s
+            retries: 3
+        depends_on:
+            - broker
+    db-adaptor:
+        build: ./time_series_db_adaptor
+        expose:
+            - "8080"
+        ports:
+            - "8083:8080"
+        depends_on:
+            - catalog
+            - db
+            - broker
+    sensors:
+        build: ./sensors
+        expose:
+            - "8080"
+        ports:
+            - "8081:8080"
+        depends_on:
+            - catalog
+            - broker
+    actuators:
+        build: ./actuators
+        expose:
+            - "8080"
+        ports:
+            - "8082:8080"
+        depends_on:
+            - catalog
+            - broker
+    weather_adaptor:
+        build: ./weather
+        ports:
+          - "8084:8080"
+        restart: always

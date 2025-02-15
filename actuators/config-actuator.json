@@ -1,11 +1,11 @@
 {
-    "ip": "localhost",
-    "port": 8082,
+    "ip": "actuators",
+    "port": 8080,
     "endpoints": {
         "mqtt": {
             "topics": ["/buildingA/1/101/ventilation", "/buildingA/1/101/windows"]
         },
-        "rest": { "restIP": "http://localhost:8082" }
+        "rest": { "restIP": "http://actuators:8080" }
     },
     "availableResources": ["ventilation", "windows"],
     "roomID": "157eafe2-95d3-4886-8f96-0a8c12c205b9",

@@ -1,8 +1,5 @@
 {
-    "dependencies": [
-        "cherrypy",
-        "requests"
-    ],
+    "dependencies": ["cherrypy", "requests"],
     "weatherAPI": {
         "url": "https://api.open-meteo.com/v1/forecast",
         "params": {
@@ -13,6 +10,6 @@
     },
     "server": {
         "host": "0.0.0.0",
-        "port": 8082
+        "port": 8080
     }
 }
