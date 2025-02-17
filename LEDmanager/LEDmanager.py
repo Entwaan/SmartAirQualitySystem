@@ -64,7 +64,7 @@ class LightManager:
     def startSim(self):
         # Start the MQTT client and subscribe to topics
         self.client.start()
-        self.client.mySubscribe("+/+/+/+/pollutants")  # Subscribe to all pollutant topics
+        self.client.mySubscribe("/+/+/+/+/pollutants")  # Subscribe to all pollutant topics
         print("Subscribed to all pollutant topics using wildcard")
 
     def stopSim(self):
@@ -87,7 +87,7 @@ class LightManager:
     def publish(self, room_id, color):
         # Publish the RGB color to the corresponding LED topic
         rgb_value = self.colors[color]
-        topic_publish = f"{room_id}/LED"  # Dynamic topic based on room ID
+        topic_publish = f"/{room_id}/LED"  # Dynamic topic based on room ID
         message = {
             'bn': f"{self.clientID}/{room_id}/LED",
             'bt': time.time(),
