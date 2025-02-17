@@ -1,16 +1,17 @@
 {
     "dbConnection": {
-        "host": "db",
-        "port": 3306,
-        "database": "timeseries_db",
-        "user": "admin",
-        "password": "admin"
+      "host": "time_series_db",
+      "port": 3306,
+      "database": "timeseries_db",
+      "user": "admin",
+      "password": "admin"
     },
     "catalog": {
-        "ip": "catalog",
-        "port": 8080
+      "ip": "catalog",
+      "port": 8080
     },
     "mqttInfos": {
-        "clientId": "time-series-db-adaptor"
+      "clientId": "time-series-db-adaptor"
     }
-}
+  }
+  
