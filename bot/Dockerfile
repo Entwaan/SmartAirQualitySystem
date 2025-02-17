@@ -1,13 +1,9 @@
-
-FROM python:3.9-slim
-
+FROM python:3.8-slim
 
 WORKDIR /app
 
+COPY bot_config.json bot.py ./
 
-COPY . /app
-
-RUN pip install --no-cache-dir telepot requests
-
+RUN pip install --no-cache-dir telepot requests matplotlib
 
 CMD ["python", "bot.py"]

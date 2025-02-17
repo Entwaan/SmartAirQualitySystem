@@ -1,0 +1,8 @@
+{
+    "TELEGRAM_TOKEN": "7847206958:AAGvH3qIjyyLmkfG4o0HjrDpNsh6WAi0LfM",
+    "CATALOG_URL": "http://catalog:8080",
+    "BOT_PASSWORD": "Antonio?",
+    "TIME_SERIES_DB_URL": "http://time_series_db_adaptor:8080",
+    "ACTUATORS_URL": "http://actuators:8080"
+  }
+  

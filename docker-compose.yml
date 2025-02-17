@@ -1,8 +1,5 @@
 
 services:
-  ###################################################################
-  # BROKER (MQTT)
-  ###################################################################
   broker:
     build:
       context: ./broker
@@ -16,9 +13,6 @@ services:
     networks:
       - iot_net
 
-  ###################################################################
-  # BASE DE DONNÉES MySQL (time_series_db)
-  ###################################################################
   time_series_db:
     build:
       context: ./time_series_db
@@ -36,9 +30,7 @@ services:
     networks:
       - iot_net
 
-  ###################################################################
-  # ADAPTATEUR time_series_db_adaptor
-  ###################################################################
+
   time_series_db_adaptor:
     build:
       context: ./time_series_db_adaptor
@@ -47,17 +39,15 @@ services:
     depends_on:
       - time_series_db
     environment:
-      DB_HOST: time_series_db        # <-- Le nom du service ci-dessus
-      DB_NAME: timeseries_db         # <-- Doit correspondre à la variable MYSQL_DATABASE
+      DB_HOST: time_series_db     
+      DB_NAME: timeseries_db       
       DB_USER: admin
       DB_PASSWORD: admin
       DB_PORT: "3306"
     networks:
       - iot_net
 
-  ###################################################################
-  # CATALOG
-  ###################################################################
+
   catalog:
     build:
       context: ./catalog
@@ -67,13 +57,10 @@ services:
       - broker
       - time_series_db
     ports:
-      - "8081:8080"  # si ton code écoute sur 8080, tu peux mapper 8081:8080 par exemple
+      - "8081:8080"  
     networks:
       - iot_net
 
-  ###################################################################
-  # SENSORS
-  ###################################################################
   sensors:
     build:
       context: ./sensors
@@ -85,9 +72,7 @@ services:
     networks:
       - iot_net
 
-  ###################################################################
-  # ACTUATORS
-  ###################################################################
+
   actuators:
     build:
       context: ./actuators
@@ -99,9 +84,7 @@ services:
     networks:
       - iot_net
 
-  ###################################################################
-  # WEATHER
-  ###################################################################
+
   weather:
     build:
       context: ./weather
@@ -113,9 +96,7 @@ services:
     networks:
       - iot_net
 
-  ###################################################################
-  # BOT
-  ###################################################################
+
   bot:
     build:
       context: ./bot
