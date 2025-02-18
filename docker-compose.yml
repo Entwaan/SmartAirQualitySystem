@@ -89,3 +89,14 @@ services:
     depends_on:
       - broker
       - catalog
+
+  air_control:
+    build: ./aircontrol
+    expose:
+      - "8080"
+    ports:
+      - "8087:8080"
+    depends_on:
+      - broker
+      - catalog
+      - weather

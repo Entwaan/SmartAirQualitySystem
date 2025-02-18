@@ -77,7 +77,7 @@ class ActuatorsConnector:
         while not self.thread_stop.is_set():
             self._put_device()
             # Close the windows if the room is closed
-            if(self.isRoomClosed() and self.windows_state == "Open"):
+            if(self.isRoomClosed() and self.windows_state != "Closed"):
                 self.windows_state = "Closed"
                 self.publish_actuator_data("windows")
             time.sleep(60)
@@ -106,7 +106,7 @@ class ActuatorsConnector:
         if(actuator == "windows"):
             if(self.windows_state == state):
                 return 409
-            if(self.isRoomClosed() and state == "Open"):
+            if(self.isRoomClosed() and state != "Closed"):
                 return 409
             self.windows_state = state
             self.publish_actuator_data("windows")
@@ -152,7 +152,9 @@ class ActuatorsRestService:
             return cherrypy.HTTPError(400, "Invalid URI")
         if('state' not in params):
             return cherrypy.HTTPError(400, "Invalid parameters")
-        if(params['state'] not in ["On", "Off", "Open", "Closed"]):
+        if(uri[0]=='windows' and params['state'] not in ["Open", "Closed", "Slightly_Open"]):
+            return cherrypy.HTTPError(400, "Invalid state")
+        if(uri[0]=='ventilation' and params['state'] not in ["On", "Off", "Boost"]):
             return cherrypy.HTTPError(400, "Invalid state")
         retCode = self.connector.setActuator(uri[0], params['state'])
         if retCode == 200:

@@ -31,10 +31,6 @@ docker containers for:
 -   message broker if we create a private one
 -   processing microservice
 
-for the sensors:
-
--   create a sensor spawner to manage each sensor in the sim
-
 for the UI
 
 -   create a micro service for processing data before sending it to the telegram bot or any other user interface

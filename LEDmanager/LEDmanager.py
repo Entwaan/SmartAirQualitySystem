@@ -1,6 +1,5 @@
 import json
 import requests
-import cherrypy
 import time
 from MyMQTT import MyMQTT
 
@@ -167,13 +166,10 @@ if __name__ == "__main__":
     # Create the LightManager instance with dynamic broker info from the catalog
     light_manager = LightManager(clientId, catalog_ip, catalog_port)
 
-    # Start the MQTT simulation with CherryPy
-    cherrypy.engine.subscribe('start', light_manager.startSim)
-    cherrypy.engine.subscribe('stop', light_manager.stopSim)
-
-    cherrypy.quickstart(light_manager, "/", {
-        "global": {
-            "server.socket_host": "0.0.0.0",
-            "server.socket_port": 8080
-        }
-    })
+    light_manager.startSim()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        light_manager.stopSim()
+        print("Stopping...", flush=True)

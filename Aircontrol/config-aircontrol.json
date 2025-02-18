@@ -1,15 +1,4 @@
 {
-    "ip": "air_control",
-    "port": 8080,
-    "endpoints": {
-        "mqtt": {
-            "topics": ["/+/+/+/pollutants"]
-        },
-        "rest": {
-            "restIP": "http://air_control:8080"
-        }
-    },
-    "availableResources": ["window", "ventilation"],
     "catalog": {
         "ip": "catalog",
         "port": 8080
@@ -18,6 +7,6 @@
         "clientId": "air_control_manager"
     },
     "weatherAdaptor": {
-        "url": "http://weather_adaptor:8080"
+        "url": "http://weather:8080"
     }
 }
