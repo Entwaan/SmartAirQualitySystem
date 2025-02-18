@@ -3,7 +3,7 @@
     "port": 8080,
     "endpoints": {
         "mqtt": {
-            "topics": ["/buildingA/1/101/aqi", "/buildingA/1/101/pollutants"]
+            "topics": ["/A/1/1/aqi", "/A/1/1/pollutants"]
         },
         "rest": { "restIP": "http://sensors:8080" }
     },
@@ -15,6 +15,6 @@
     },
     "mqttInfos": {
         "clientId": "sensor-A101",
-        "basename": "/buildingA/1/101"
+        "basename": "/A/1/1"
     }
 }

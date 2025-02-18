@@ -3,7 +3,7 @@
     "port": 8080,
     "endpoints": {
         "mqtt": {
-            "topics": ["/buildingA/1/101/ventilation", "/buildingA/1/101/windows"]
+            "topics": ["/A/1/1/ventilation", "/A/1/1/windows"]
         },
         "rest": { "restIP": "http://actuators:8080" }
     },
@@ -15,6 +15,6 @@
     },
     "mqttInfos": {
         "clientId": "actuator-A101",
-        "basename": "/buildingA/1/101"
+        "basename": "/A/1/1"
     }
 }
