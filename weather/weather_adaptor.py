@@ -16,10 +16,10 @@ class WeatherAdaptor:
         try:
             response = requests.get(self.api_url, params=self.api_params)
             response.raise_for_status()
-            return response.json()
+            return json.dumps(response.json()).encode("utf-8")
         except requests.exceptions.RequestException as e:
             cherrypy.response.status = 500
-            return {"error": str(e)}
+            return json.dumps({"error": str(e)}).encode("utf-8")
 
 if __name__ == "__main__":
     # Load configuration from config-weather-adaptor.json
