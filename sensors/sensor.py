@@ -67,8 +67,8 @@ class SensorsConnector:
         self._post_device()
 
     def notify(self, topic, msg):
-        print(f"Received message on topic {topic}: {msg}")
-        self.simulator.computed_aqi_json = json.loads(msg)
+        print(f"Received message on topic {topic}")
+        self.simulator.computed_aqi_json = json.loads(json.loads(msg))
 
 
     def _get_broker(self):
@@ -117,6 +117,7 @@ class SensorsConnector:
                 ]
             }
             self.mqtt_client.myPublish(self.config['endpoints']['mqtt']['topics'][1], json.dumps(sensor_data))
+            print("Published sensor data")
             self._put_device()
             time.sleep(60)
 

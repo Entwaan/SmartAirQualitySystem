@@ -1,115 +1,91 @@
 
 services:
   broker:
-    build:
-      context: ./broker
-      dockerfile: Dockerfile
-    container_name: broker
+    build: ./broker
+    expose:
+      - "1883"
     ports:
       - "1883:1883"
-      - "9001:9001"
-    volumes:
-      - ./broker/mosquitto.conf:/mosquitto/config/mosquitto.conf
-    networks:
-      - iot_net
 
   time_series_db:
-    build:
-      context: ./time_series_db
-      dockerfile: Dockerfile
-    container_name: time_series_db
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: timeseries_db
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: admin
+    build: ./time_series_db
+    expose:
+      - "3306"
     ports:
-      - "3306:3306"
-    volumes:
-      - time_series_db_data:/var/lib/mysql
-    networks:
-      - iot_net
+      - "3307:3306"
 
 
   time_series_db_adaptor:
-    build:
-      context: ./time_series_db_adaptor
-      dockerfile: Dockerfile
-    container_name: time_series_db_adaptor
+    build: ./time_series_db_adaptor
+    expose:
+      - "8080"
+    ports: 
+      - "8083:8080"
     depends_on:
       - time_series_db
-    environment:
-      DB_HOST: time_series_db     
-      DB_NAME: timeseries_db       
-      DB_USER: admin
-      DB_PASSWORD: admin
-      DB_PORT: "3306"
-    networks:
-      - iot_net
-
+      - broker
+      - catalog
 
   catalog:
-    build:
-      context: ./catalog
-      dockerfile: Dockerfile
-    container_name: catalog
-    depends_on:
-      - broker
-      - time_series_db
+    build: ./catalog
+    expose:
+      - "8080"
     ports:
-      - "8081:8080"  
-    networks:
-      - iot_net
+      - "8080:8080"  
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/broker"]
+        interval: 10s
+        timeout: 5s
+        retries: 3
+    depends_on:
+        - broker
 
   sensors:
-    build:
-      context: ./sensors
-      dockerfile: Dockerfile
-    container_name: sensors
+    build: ./sensors
+    expose:
+      - "8080"
+    ports:
+      - "8081:8080"
     depends_on:
       - broker
       - catalog
-    networks:
-      - iot_net
 
 
   actuators:
-    build:
-      context: ./actuators
-      dockerfile: Dockerfile
-    container_name: actuators
+    build: ./actuators
+    expose:
+      - "8080"
+    ports:
+      - "8082:8080"
     depends_on:
       - broker
       - catalog
-    networks:
-      - iot_net
 
 
   weather:
-    build:
-      context: ./weather
-      dockerfile: Dockerfile
-    container_name: weather
-    depends_on:
-      - broker
-      - catalog
-    networks:
-      - iot_net
+    build: ./weather
+    expose:
+      - "8080"
+    ports:
+      - "8084:8080"
 
 
   bot:
-    build:
-      context: ./bot
-      dockerfile: Dockerfile
-    container_name: bot
+    build: ./bot
+    expose:
+      - "8080"
+    ports:
+      - "8085:8080"
     depends_on:
       - broker
       - catalog
-    networks:
-      - iot_net
 
-networks:
-  iot_net:
-
-volumes:
-  time_series_db_data:
+  led_manager:
+    build: ./LEDmanager
+    expose:
+      - "8080"
+    ports:
+      - "8086:8080"
+    depends_on:
+      - broker
+      - catalog

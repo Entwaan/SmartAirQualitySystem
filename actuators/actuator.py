@@ -24,11 +24,11 @@ class ActuatorsConnector:
         self._post_device()
 
     def notify(self, topic, payload):
-        print(f"Received message on topic {topic}: {payload}")
-        msg = json.loads(payload)
+        msg = json.loads(json.loads(payload))
+        print(f"Received message on topic {topic}")
         if(topic == self.config['mqttInfos']['basename']+"/LED"):
             self.led_rgb = msg['e'][0]['v']
-            print(f"LED color changed to: {self.led_rgb}")
+            print(f"LED color changed to: {self.led_rgb}", flush=True)
 
     def _get_broker(self):
         self.catalog_ip = self.config["catalog"]["ip"]
@@ -110,12 +110,14 @@ class ActuatorsConnector:
                 return 409
             self.windows_state = state
             self.publish_actuator_data("windows")
+            print(f"Windows state changed to: {self.windows_state}", flush=True)
             return 200
         if(actuator == "ventilation"):
             if(self.ventilation_state == state):
                 return 409
             self.ventilation_state = state
             self.publish_actuator_data("ventilation")
+            print(f"Ventilation state changed to: {self.ventilation_state}", flush=True)
             return 200
         
 class ActuatorsRestService:

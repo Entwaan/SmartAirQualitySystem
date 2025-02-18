@@ -14,7 +14,7 @@ class TimeSeriesAdaptor:
     def __init__(self):
         self.settings = json.load(open('config-time-series-db-adaptor.json'))
         print("Connecting to MySQL database...", flush=True)
-        time.sleep(5)
+        time.sleep(10)
         self.db = mysql.connector.connect(
             host=self.settings["dbConnection"]["host"],
             port=self.settings["dbConnection"]["port"],
@@ -48,22 +48,32 @@ class TimeSeriesAdaptor:
     def _fetch_results(self, query, params=None):
         cursor = self.db.cursor(dictionary=True)
         cursor.execute(query, params or ())
-        return cursor.fetchall()
+        results = cursor.fetchall()
+    
+        # Convert datetime fields to strings
+        for row in results:
+            for key, value in row.items():
+                if isinstance(value, datetime):
+                    row[key] = value.strftime('%Y-%m-%d %H:%M:%S')
+        
+        return results
 
     def notify(self, topic, payload):
         message = json.loads(payload)
         message_json = json.loads(message)
+        print(f"Received message on topic {topic}: {message_json}", flush=True)
         topic_parts = topic.split("/")
-        building = topic_parts[0]
-        floor = topic_parts[1]
-        room = topic_parts[2]
-        measureType = topic_parts[3]
-        timestamp = datetime.fromtimestamp(message_json["bt"])
+        building = topic_parts[1]
+        floor = topic_parts[2]
+        room = topic_parts[3]
+        measureType = topic_parts[4]
+        timestamp = datetime.utcfromtimestamp(message_json["bt"]).strftime('%Y-%m-%d %H:%M:%S')
         value = message_json["e"][0]["v"]
-
         if(measureType in ["aqi", "windows", "ventilation"]):
+            print(f"Inserting data into database: {building}, {floor}, {room}, {measureType}, {value}, {timestamp}", flush=True)
             tables = {"aqi": "air_quality_index", "windows": "windows", "ventilation": "ventilation"}
             query = f"INSERT INTO {tables[measureType]} (building, floor, room, value, timestamp) VALUES (%s, %s, %s, %s, %s)"
+            print(query, (building, floor, room, value, timestamp), flush=True)
             self._fetch_results(query, (building, floor, room, value, timestamp))
 
 
@@ -78,16 +88,30 @@ class TimeSeriesAdaptor:
         endpoint = uri[0]
         if endpoint not in ["aqi", "windows", "ventilation"]:
             return json.dumps({"error": "Invalid endpoint"}).encode('utf-8')
+        if endpoint == "aqi":
+            table = "air_quality_index"
+        else :
+            table = endpoint
 
+        building = params.get("building")
+        floor = params.get("floor")
         room = params.get("room")
         time_range = params.get("range")  # '1h', '30m', '1d', '1y'
 
-        query = f"SELECT * FROM {endpoint} WHERE 1=1"
+        query = f"SELECT * FROM {table} WHERE 1=1"
         query_params = []
 
         if room:
             query += " AND room = %s"
             query_params.append(room)
+        
+        if floor:
+            query += " AND floor = %s"
+            query_params.append(floor)
+        
+        if building:
+            query += " AND building = %s"
+            query_params.append(building)
 
         if time_range:
             time_units = {"m": "MINUTE", "h": "HOUR", "d": "DAY", "y": "YEAR"}
@@ -101,6 +125,7 @@ class TimeSeriesAdaptor:
                 return json.dumps({"error": "Invalid time range unit"}).encode('utf-8')
 
         results = self._fetch_results(query, query_params)
+        print(f"Results: {results}", flush=True)
         return json.dumps(results).encode('utf-8')
 
 if __name__ == '__main__':

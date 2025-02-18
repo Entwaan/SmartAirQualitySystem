@@ -1,6 +1,6 @@
 # SmartAirQualitySystem
 
-A final proyect for Internet of Things
+A final project for Internet of Things course
 
 ## Team Members
 

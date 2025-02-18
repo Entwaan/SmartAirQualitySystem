@@ -1,21 +1,9 @@
 {
-    "ip": "led_manager",
-    "port": 8080,
-    "endpoints": {
-        "mqtt": {
-            "topics": ["/+/LED"]
-        },
-        "rest": {
-            "restIP": "http://led_manager:8080"
-        }
-    },
-    "availableResources": ["LED", "eaqi"],
     "catalog": {
         "ip": "catalog",
         "port": 8080
     },
     "mqttInfos": {
-        "clientId": "led_manager",
-        "basename": "/buildingA/1/101"
+        "clientId": "led_manager"
     }
 }
