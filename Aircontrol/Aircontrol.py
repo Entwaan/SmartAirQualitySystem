@@ -121,10 +121,10 @@ class AirControlManager:
         ])
 
         # Extract weather parameters from the retrieved data
-        wind_speed = weather_data.get("wind_speed_10m", 0)
-        precipitation = weather_data.get("precipitation", 0)
-        temperature = weather_data.get("temperature_2m", 0)
-        wind_direction = weather_data.get("wind_direction_10m", 0)
+        wind_speed = weather_data["current"].get("wind_speed_10m", 0)
+        precipitation = weather_data["current"].get("precipitation", 0)
+        temperature = weather_data["current"].get("temperature_2m", 0)
+        wind_direction = weather_data["current"].get("wind_direction_10m", 0)
 
         # Decision Logic
         if overall_index > 3:

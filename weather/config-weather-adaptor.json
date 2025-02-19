@@ -5,7 +5,7 @@
         "params": {
             "latitude": 45.065037,
             "longitude": 7.658205,
-            "current_weather": "true"
+            "current": ["temperature_2m", "precipitation", "wind_speed_10m", "wind_direction_10m"]
         }
     },
     "server": {
