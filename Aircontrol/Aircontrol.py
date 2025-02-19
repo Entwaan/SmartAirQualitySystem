@@ -159,21 +159,21 @@ class AirControlManager:
 
     def control_window(self, room_id, action):
         # change windows status through rest api with http parameter action
-        response = requests.put(f"http://{self.rooms[room_id]['windows_actuator_ip']}/windows", params={"state": action})
+        response = requests.put(f"{self.rooms[room_id]['windows_actuator_ip']}/windows", params={"state": action})
         if response.status_code == 200:
             print(f"Window {action} for room {room_id}", flush=True)
             self.rooms[room_id]["window_status"] = action
         else:
-            print(f"Error changing window state: {response.text}", flush=True)
+            print(f"Windows state unchanged: the windows are already in state {action} or the room is closed", flush=True)
 
     def control_ventilation(self, room_id, action):
         # change ventilation status through rest api with http parameter action
-        response = requests.put(f"http://{self.rooms[room_id]['ventilation_actuator_ip']}/ventilation", params={"state": action})
+        response = requests.put(f"{self.rooms[room_id]['ventilation_actuator_ip']}/ventilation", params={"state": action})
         if response.status_code == 200:
             print(f"Ventilation {action} for room {room_id}", flush=True)
             self.rooms[room_id]["ventilation_status"] = action
         else:
-            print(f"Error changing ventilation state: {response.text}", flush=True)
+            print(f"Ventilation state unchanged: the ventilation is already in state {action}", flush=True)
 
 if __name__ == "__main__":
     # Read configuration from the JSON file (including catalog and weather adaptor info)

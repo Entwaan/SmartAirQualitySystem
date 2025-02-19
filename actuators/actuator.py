@@ -127,7 +127,7 @@ class ActuatorsRestService:
 
     def GET(self, *uri, **params):
         if(len(uri) == 0 or uri[0] not in ["windows", "ventilation"]):
-            return cherrypy.HTTPError(400, "Invalid URI")
+            raise cherrypy.HTTPError(400, "Invalid URI")
         msg = {
             'bn': self.connector.config['mqttInfos']['basename'] + "/actuators",
             'bt': time.time(),
@@ -149,17 +149,17 @@ class ActuatorsRestService:
     
     def PUT(self, *uri, **params):
         if(len(uri) == 0 or uri[0] not in ["windows", "ventilation"]):
-            return cherrypy.HTTPError(400, "Invalid URI")
+            raise cherrypy.HTTPError(400, "Invalid URI")
         if('state' not in params):
-            return cherrypy.HTTPError(400, "Invalid parameters")
+            raise cherrypy.HTTPError(400, "Invalid parameters")
         if(uri[0]=='windows' and params['state'] not in ["Open", "Closed", "Slightly_Open"]):
-            return cherrypy.HTTPError(400, "Invalid state")
+            raise cherrypy.HTTPError(400, "Invalid state")
         if(uri[0]=='ventilation' and params['state'] not in ["On", "Off", "Boost"]):
-            return cherrypy.HTTPError(400, "Invalid state")
+            raise cherrypy.HTTPError(400, "Invalid state")
         retCode = self.connector.setActuator(uri[0], params['state'])
         if retCode == 200:
             return json.dumps({"result": "State changed successfuly"}).encode('utf-8')
-        return cherrypy.HTTPError(retCode, "Error changing state (the room is already in that state or currently closed)")
+        raise cherrypy.HTTPError(retCode, "Error changing state (the room is already in that state or currently closed)")
 
 if __name__ == '__main__':
     config = json.load(open("config-actuator.json"))

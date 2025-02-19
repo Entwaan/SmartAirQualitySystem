@@ -70,7 +70,6 @@ class TimeSeriesAdaptor:
         timestamp = datetime.utcfromtimestamp(message_json["bt"]).strftime('%Y-%m-%d %H:%M:%S')
         value = message_json["e"][0]["v"]
         if(measureType in ["aqi", "windows", "ventilation"]):
-            print(f"Inserting data into database: {building}, {floor}, {room}, {measureType}, {value}, {timestamp}", flush=True)
             tables = {"aqi": "air_quality_index", "windows": "windows", "ventilation": "ventilation"}
             query = f"INSERT INTO {tables[measureType]} (building, floor, room, value, timestamp) VALUES (%s, %s, %s, %s, %s)"
             print(query, (building, floor, room, value, timestamp), flush=True)

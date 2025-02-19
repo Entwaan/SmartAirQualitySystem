@@ -46,7 +46,7 @@ class CatalogService:
     def periodic_cleanup(self):
         """Periodic cleanup thread to remove old devices every 2 minutes."""
         while not self.thread_stop.is_set():
-            print("Running periodic cleanup...")
+            print("Running periodic cleanup...", flush=True)
             devices = CatalogService.load_json("devices.json")
             current_time = datetime.datetime.now(datetime.timezone.utc)
             updated_devices = [
@@ -58,7 +58,7 @@ class CatalogService:
                 room["devices"] = [device for device in room["devices"] if device in [d["deviceID"] for d in updated_devices]]
             CatalogService.save_json("devices.json", updated_devices)
             CatalogService.save_json("rooms.json", rooms)
-            time.sleep(10)
+            time.sleep(60)
 
     def get_item(self, collection, item_id, item_name):
         """Get an item from a collection by ID."""
