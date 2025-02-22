@@ -49,11 +49,11 @@ class LightManager:
             data = json.loads(json.loads(msg))
             print(f"Message received on topic {topic}: {data}", flush=True)
             parts = topic.split("/")
-            room_id = "/".join(parts[:4]) if len(parts) >= 4 else None  # Unique identifier for each room
+            room_id = "/".join(parts[:4]) if len(parts) >= 4 else None 
 
             if room_id:
                 if room_id not in self.rooms:
-                    self.add_room(room_id)  # Dynamically add room if not present
+                    self.add_room(room_id) 
                 room = self.rooms[room_id]
                 for entry in data['e']:
                     pollutant = entry['n']
@@ -112,7 +112,7 @@ class LightManager:
         return color, worst_eaqi
 
     def publish_led(self, room_id, color):
-        topic_publish = f"{room_id}/LED"  # Dynamic topic based on room ID
+        topic_publish = f"{room_id}/LED"  
         message = {
             'bn': f"{room_id}/LED",
             'bt': time.time(),
@@ -122,7 +122,7 @@ class LightManager:
         print(f"LED color {color} published for room {room_id} at {topic_publish}", flush=True)
 
     def publish_eaqi(self, room_id, eaqi_value):
-        topic_publish = f"{room_id}/aqi"  # EAQI topic per room
+        topic_publish = f"{room_id}/aqi"  
         message = {
             'bn': f"{room_id}/aqi",
             'bt': time.time(),
