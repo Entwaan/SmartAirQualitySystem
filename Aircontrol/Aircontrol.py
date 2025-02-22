@@ -9,12 +9,8 @@ class AirControlManager:
         self.catalog_ip = catalog_ip
         self.catalog_port = catalog_port
         self.weatherAdaptor_url = weatherAdaptor_url
-
-        # Retrieve broker details dynamically from the catalog
         self._get_broker()
-
         self.rooms = {}
-
         self.client = MyMQTT(clientID, self.broker, self.port, self)
 
         self.eaqi_thresholds = {
