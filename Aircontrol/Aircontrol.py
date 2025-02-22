@@ -26,7 +26,6 @@ class AirControlManager:
         }
 
     def _get_broker(self):
-        """Retrieve broker details from the catalog."""
         try:
             response = requests.get(f"http://{self.catalog_ip}:{self.catalog_port}/broker")
             response.raise_for_status()
@@ -69,10 +68,9 @@ class AirControlManager:
             "windows_actuator_ip": None,
             "ventilation_actuator_ip": None
         }
-        # get all rooms from the catalog
+      
         response = requests.get(f"http://{self.catalog_ip}:{self.catalog_port}/rooms")
         rooms = response.json()
-        # iterate through the rooms to find the room with the given building, floor and room number (parts of the room id)
         building, floor, room_number = room_id.split("/")
         for room in rooms:
             if room["buildingName"] == building and str(room["floor"]) == floor and str(room["number"]) == room_number:
@@ -90,7 +88,6 @@ class AirControlManager:
 
     def startSim(self):
         self.client.start()
-        # Subscribe only to pollutant topics
         self.client.mySubscribe("/+/+/+/pollutants")
         print("Subscribed to pollutant topics")
 
@@ -100,7 +97,6 @@ class AirControlManager:
         print("Unsubscribed from all topics")
 
     def get_weather_data(self):
-        """Fetch weather data from the Weather Adaptor via HTTP."""
         try:
             response = requests.get(self.weatherAdaptor_url)
             response.raise_for_status()
@@ -112,15 +108,12 @@ class AirControlManager:
 
     def make_decision(self, room_id):
         room = self.rooms[room_id]
-        # Fetch the latest weather data on demand
         weather_data = self.get_weather_data()
 
         overall_index = max([
             self.determine_eaqi_level(pollutant, value)
             for pollutant, value in room["latest_values"].items()
         ])
-
-        # Extract weather parameters from the retrieved data
         wind_speed = weather_data["current"].get("wind_speed_10m", 0)
         precipitation = weather_data["current"].get("precipitation", 0)
         temperature = weather_data["current"].get("temperature_2m", 0)
@@ -133,11 +126,11 @@ class AirControlManager:
         elif precipitation > 0 or temperature > 30:
             self.control_window(room_id, "Closed")
             if wind_speed > 15:
-                self.control_ventilation(room_id, "Boost")  # Boost mode for high wind
+                self.control_ventilation(room_id, "Boost") 
             else:
                 self.control_ventilation(room_id, "On")
         elif wind_speed > 10 and overall_index <= 3:
-            if 90 <= wind_direction <= 270:  # Favorable wind direction
+            if 90 <= wind_direction <= 270:  
                 self.control_window(room_id, "Open")
                 self.control_ventilation(room_id, "Off")
             else:
@@ -145,7 +138,7 @@ class AirControlManager:
                 self.control_ventilation(room_id, "On")
         else:
             if overall_index <= 2:
-                self.control_window(room_id, "Slightly_Open")  # Partial opening for moderate AQI
+                self.control_window(room_id, "Slightly_Open") 
             else:
                 self.control_window(room_id, "Closed")
             self.control_ventilation(room_id, "On")
@@ -155,10 +148,9 @@ class AirControlManager:
         for index, threshold in enumerate(thresholds):
             if value <= threshold:
                 return index + 1
-        return 5  # Very Poor Air Quality
+        return 5 
 
     def control_window(self, room_id, action):
-        # change windows status through rest api with http parameter action
         response = requests.put(f"{self.rooms[room_id]['windows_actuator_ip']}/windows", params={"state": action})
         if response.status_code == 200:
             print(f"Window {action} for room {room_id}", flush=True)
@@ -167,7 +159,6 @@ class AirControlManager:
             print(f"Windows state unchanged: the windows are already in state {action} or the room is closed", flush=True)
 
     def control_ventilation(self, room_id, action):
-        # change ventilation status through rest api with http parameter action
         response = requests.put(f"{self.rooms[room_id]['ventilation_actuator_ip']}/ventilation", params={"state": action})
         if response.status_code == 200:
             print(f"Ventilation {action} for room {room_id}", flush=True)
@@ -176,7 +167,6 @@ class AirControlManager:
             print(f"Ventilation state unchanged: the ventilation is already in state {action}", flush=True)
 
 if __name__ == "__main__":
-    # Read configuration from the JSON file (including catalog and weather adaptor info)
     with open("config-aircontrol.json", "r") as file:
         config = json.load(file)
 
@@ -193,4 +183,4 @@ if __name__ == "__main__":
             time.sleep(1)
     except KeyboardInterrupt:
         air_control_manager.stopSim()
-        print("Stopping...")
+        print("Stopping")
