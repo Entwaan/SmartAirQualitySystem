@@ -1,12 +1,8 @@
 [
     {
-        "name": "Jane",
-        "surname": "Smith",
-        "email": "jane.smith@example.com",
+        "username": "JaneSmith",
         "telegramChatID": "654321",
-        "rooms": [
-            "157eafe2-95d3-4886-8f96-0a8c12c205b9"
-        ],
+        "rooms": ["157eafe2-95d3-4886-8f96-0a8c12c205b9"],
         "userID": "00952276-159c-4208-bb31-a03e8287e48e"
     }
 ]
